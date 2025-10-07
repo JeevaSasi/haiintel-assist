@@ -22,6 +22,18 @@ const CHAT_RESPONSES: Record<string, string> = {
 
 const SUGGESTIONS = ["What is HaiIntel?", "Services offered", "Contact info"];
 
+const ThinkingIndicator = ({ countdown }: { countdown: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="px-4 py-3 bg-card border border-primary/30 rounded-lg mr-auto max-w-[70%]"
+  >
+    <p className="text-sm text-muted-foreground">
+      HaiIntel is thinking for {countdown} sec(s)...
+    </p>
+  </motion.div>
+);
+
 const TypingIndicator = () => (
   <div className="flex items-center space-x-1 px-4 py-3 bg-card border border-primary/30 rounded-lg mr-auto max-w-[70%]">
     {[0, 1, 2].map((i) => (
@@ -39,8 +51,25 @@ const TypingIndicator = () => (
   </div>
 );
 
-const MessageBubble = ({ message }: { message: Message }) => {
+const MessageBubble = ({ message, isTyping }: { message: Message; isTyping?: boolean }) => {
   const isUser = message.sender === "user";
+  const [displayedText, setDisplayedText] = useState(isTyping ? "" : message.text);
+  
+  useEffect(() => {
+    if (isTyping && message.sender === "ai") {
+      let index = 0;
+      setDisplayedText("");
+      const timer = setInterval(() => {
+        if (index < message.text.length) {
+          setDisplayedText(message.text.slice(0, index + 1));
+          index++;
+        } else {
+          clearInterval(timer);
+        }
+      }, 30);
+      return () => clearInterval(timer);
+    }
+  }, [isTyping, message.text, message.sender]);
   
   return (
     <motion.div
@@ -56,7 +85,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
             : "bg-card text-card-foreground border border-primary/30 mr-auto"
         }`}
       >
-        <p className="text-sm">{message.text}</p>
+        <p className="text-sm">{displayedText}</p>
       </div>
     </motion.div>
   );
@@ -66,8 +95,11 @@ export const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
+  const [thinkingCountdown, setThinkingCountdown] = useState(2);
   const [isTyping, setIsTyping] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,17 +125,27 @@ export const ChatBot = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages, isTyping, isThinking]);
 
   const simulateAIResponse = async (userMessage: string) => {
+    // Show thinking indicator with countdown
+    setIsThinking(true);
+    setThinkingCountdown(2);
+    
+    // Countdown from 2 to 1
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setThinkingCountdown(1);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    setIsThinking(false);
     setIsTyping(true);
     
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    // Brief pause before typing starts
+    await new Promise((resolve) => setTimeout(resolve, 300));
     
     const lowerMessage = userMessage.toLowerCase().trim();
     const response = CHAT_RESPONSES[lowerMessage] || "Sorry, I couldn't find an answer for that. Please try asking about our services, what HaiIntel is, or contact information.";
     
-    let displayedText = "";
     const responseMessage: Message = {
       id: Date.now().toString(),
       sender: "ai",
@@ -112,8 +154,12 @@ export const ChatBot = () => {
     };
     
     setIsTyping(false);
+    setTypingMessageId(responseMessage.id);
     setMessages((prev) => [...prev, responseMessage]);
     setShowSuggestions(true);
+    
+    // Clear typing effect after message is fully typed
+    setTimeout(() => setTypingMessageId(null), response.length * 30 + 500);
   };
 
   const handleSendMessage = () => {
@@ -133,8 +179,16 @@ export const ChatBot = () => {
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setInputValue(suggestion);
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      sender: "user",
+      text: suggestion,
+      timestamp: Date.now(),
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
     setShowSuggestions(false);
+    simulateAIResponse(suggestion);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -186,14 +240,19 @@ export const ChatBot = () => {
             {/* Messages List */}
             <div className="h-96 overflow-y-auto p-4 space-y-3 bg-background/50">
               {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
+                <MessageBubble 
+                  key={message.id} 
+                  message={message} 
+                  isTyping={message.id === typingMessageId}
+                />
               ))}
+              {isThinking && <ThinkingIndicator countdown={thinkingCountdown} />}
               {isTyping && <TypingIndicator />}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Suggestions */}
-            {showSuggestions && !isTyping && (
+            {showSuggestions && !isTyping && !isThinking && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
