@@ -3,30 +3,30 @@ import { Mail, Linkedin, Twitter, Github } from "lucide-react";
 
 const footerLinks = [
   {
-    title: "Company",
+    title: "HaiProducts",
     links: [
-      { label: "About Us", href: "#about" },
-      { label: "Services", href: "#services" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "#contact" },
+      { label: "HaiIntel-Recode", href: "#about" },
+      { label: "HaiReach", href: "#services" },
+      { label: "HaiOnboarding", href: "#" },
+      { label: "HaiResolve", href: "#contact" },
+      { label: "HaiModels", href: "#contact" },
     ],
   },
   {
-    title: "Resources",
+    title: "Services",
     links: [
-      { label: "Blog", href: "#" },
-      { label: "Case Studies", href: "#" },
-      { label: "Documentation", href: "#" },
-      { label: "Support", href: "#" },
+      { label: "Intelligence HaiPODs", href: "#" },
+      { label: "AI Architecture", href: "#" },
+      { label: "Legacy Modernization", href: "#" },
+      { label: "CIO Partnership", href: "#" },
     ],
   },
   {
-    title: "Legal",
+    title: "Contact",
     links: [
-      { label: "Privacy Policy", href: "#" },
-      { label: "Terms of Service", href: "#" },
-      { label: "Cookie Policy", href: "#" },
-      { label: "Compliance", href: "#" },
+      { label: "hello@haiintel.com", href: "#" },
+      { label: "+1 (555) 123-4567", href: "#" },
+      { label: "Global Headquarters Enterprise AI District", href: "#" },
     ],
   },
 ];
@@ -40,11 +40,43 @@ const socialLinks = [
 
 export const Footer = () => {
   return (
-    <footer className="bg-card border-t border-primary/30 relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+    <footer className=" bg-card border-t border-primary/30 relative overflow-hidden">
+      {/* 3D Background gradient */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-t from-background to-transparent"
+        animate={{
+          backgroundPosition: ["0% 0%", "0% 100%", "0% 0%"],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+
+      {/* Floating Particles */}
+      {[...Array(10)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 bg-primary/30 rounded-full"
+          style={{
+            left: `${Math.random() * 100}%`,
+            bottom: "0%",
+          }}
+          animate={{
+            y: [-100, -300],
+            opacity: [0, 0.5, 0],
+          }}
+          transition={{
+            duration: 5 + Math.random() * 5,
+            repeat: Infinity,
+            delay: i * 0.5,
+            ease: "easeOut",
+          }}
+        />
+      ))}
       
-      <div className="max-w-6xl mx-auto px-6 md:px-20 py-16 relative z-10">
+      <div className="max-w-full mx-auto px-6 md:px-20 py-16 relative z-10">
         {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
@@ -53,7 +85,7 @@ export const Footer = () => {
               Hai<span className="text-primary">Intel</span>
             </h3>
             <p className="text-muted-foreground text-sm mb-6">
-              Intelligence. Not Just Software.
+            Partnering with CIOs to embed human-rooted AI into enterprise transformation — accelerating outcomes through intelligence-first systems.
             </p>
             <div className="flex gap-3">
               {socialLinks.map((social, index) => (
